@@ -26,9 +26,50 @@ pub struct DeviceGeneralStatus {
     device_status: [u8; 8],
 }
 
-pub fn read_general_status() -> Option<DeviceGeneralStatus> {
-    let result = query(convert_cmd(CMD_GENERAL_STATUS));
-    return result.map(|r| parse_general_status(r));
+pub fn general_status_request() -> Vec<u8> {
+    let mut request = convert_cmd(CMD_GENERAL_STATUS);
+    append_crc(&mut request);
+    return request;
+}
+
+#[allow(dead_code)]
+pub fn mode_inquiry_request() -> Vec<u8> {
+    let mut request = convert_cmd(CMD_MODE_INQUIRY);
+    append_crc(&mut request);
+    return request;
+}
+
+#[allow(dead_code)]
+pub fn rating_information_request() -> Vec<u8> {
+    let mut request = convert_cmd(CMD_RATING_INFORMATION);
+    append_crc(&mut request);
+    return request;
+}
+
+pub fn parse_general_status_response(response: Vec<u8>) -> Option<DeviceGeneralStatus> {
+    if validate_crc(&response) {
+        return Some(parse_general_status(response));
+    } else {
+        return None;
+    }
+}
+
+#[allow(dead_code)]
+pub fn parse_mode_inquiry_response(response: Vec<u8>) -> Option<&'static str> {
+    if validate_crc(&response) {
+        return Some("Crc ok");
+    } else {
+        return None;
+    }
+}
+
+#[allow(dead_code)]
+pub fn parse_rating_information_response(response: Vec<u8>) -> Option<&'static str> {
+    if validate_crc(&response) {
+        return Some("Crc ok");
+    } else {
+        return None;
+    }
 }
 
 fn parse_general_status(result: Vec<u8>) -> DeviceGeneralStatus {
@@ -71,26 +112,6 @@ where
 
 fn convert_cmd(cmd: &str) -> Vec<u8> {
     return cmd.chars().map(|c| c as u8).collect();
-}
-
-fn query(cmd: Vec<u8>) -> Option<Vec<u8>> {
-    let mut request = cmd.clone();
-    append_crc(request.as_mut());
-    send(request);
-    return read_response();
-}
-
-fn send(request: Vec<u8>) {
-    print!("Sending... {:?}", request);
-    //TODO
-}
-
-fn read_response() -> Option<Vec<u8>> {
-    let response: Vec<u8> = Vec::new();
-    if validate_crc(&response) {
-        return Some(response);
-    }
-    return None;
 }
 
 // https://www.nongnu.org/avr-libc/user-manual/group__util__crc.html
