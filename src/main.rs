@@ -17,6 +17,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
     if write(&mut uart, inverter::general_status_request())? {
         let response = read(&mut uart)?;
+        println!("{:?}", response);
         let general_status_data = inverter::parse_general_status_response(response).unwrap();
         println!("{:?}", general_status_data);
     }

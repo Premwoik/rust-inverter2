@@ -48,7 +48,10 @@ pub fn rating_information_request() -> Vec<u8> {
 
 pub fn parse_general_status_response(response: Vec<u8>) -> Option<DeviceGeneralStatus> {
     if validate_crc(&response) {
-        return Some(parse_general_status(response));
+        // Truncate the CRC
+        let mut response2 = response.to_owned();
+        response2.truncate(response2.len().saturating_sub(2));
+        return Some(parse_general_status(response2));
     } else {
         return None;
     }
