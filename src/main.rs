@@ -5,23 +5,31 @@ extern crate log;
 use rppal::uart::{Parity, Queue, Uart};
 use std::error::Error;
 
+use tokio::time::{sleep, Duration};
+
+mod influxdb;
 mod inverter;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
     pretty_env_logger::init();
 
+    let client = influxdb::influx_new_client();
     let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
 
-    uart.flush(Queue::Both)?;
+    loop {
+        uart.flush(Queue::Both)?;
 
-    if write(&mut uart, inverter::general_status_request())? {
-        let response = read(&mut uart)?;
-        //println!("{:?}", response);
-        let general_status_data = inverter::parse_general_status_response(response).unwrap();
-        println!("{:?}", general_status_data);
+        if write(&mut uart, inverter::general_status_request())? {
+            let response = read(&mut uart)?;
+            let general_status_data = inverter::parse_general_status_response(response).unwrap();
+            let influx_msg = inverter::general_status_m(general_status_data);
+            println!("{}", influx_msg);
+            influxdb::write(&client, influx_msg);
+        }
+
+        sleep(Duration::from_secs(5)).await;
     }
-    Ok(())
 }
 
 fn write(uart: &mut Uart, mut msg: Vec<u8>) -> Result<bool, Box<dyn Error>> {
