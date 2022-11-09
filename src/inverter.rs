@@ -19,7 +19,7 @@ pub struct DeviceGeneralStatus {
     battery_charging_current: u16,
     battery_capacity: u16,
     inverter_heat_sink_temperature: u16,
-    pv_input_current: u16,
+    pv_input_current: f32,
     pv_input_voltage: f32,
     battery_voltage_scc: f32,
     battery_discharge_current: u16,
@@ -87,14 +87,16 @@ fn parse_general_status(result: Vec<u8>) -> DeviceGeneralStatus {
         ac_output_load: convert(&result, &mut offset, 3),
         bus_voltage: convert(&result, &mut offset, 3),
         battery_voltage: convert(&result, &mut offset, 5),
-        battery_charging_current: convert(&result, &mut offset, 2),
+        battery_charging_current: convert(&result, &mut offset, 3),
         battery_capacity: convert(&result, &mut offset, 3),
         inverter_heat_sink_temperature: convert(&result, &mut offset, 4),
         pv_input_current: convert(&result, &mut offset, 4),
         pv_input_voltage: convert(&result, &mut offset, 5),
         battery_voltage_scc: convert(&result, &mut offset, 5),
         battery_discharge_current: convert(&result, &mut offset, 5),
-        device_status: result[(offset as usize)..].try_into().unwrap(),
+        device_status: result[(offset as usize)..(offset as usize + 8)]
+            .try_into()
+            .unwrap(),
     };
 }
 
@@ -108,7 +110,7 @@ where
         .unwrap()
         .parse::<T>()
         .unwrap();
-    *offset = *offset + size;
+    *offset = *offset + size + 1;
 
     return result;
 }
@@ -199,23 +201,23 @@ mod tests {
     #[test]
     fn can_parse_general_status_response_correctly() {
         let init_char: Vec<u8> = vec![0x28];
-        let grid_voltage = vec![0x30, 0x35, 0x31, 0x2E, 0x32];
-        let grid_frequency = vec![0x35, 0x30, 0x2E, 0x30];
-        let ac_output_voltage = vec![0x33, 0x30, 0x31, 0x2E, 0x32];
-        let ac_output_frequency = vec![0x35, 0x30, 0x2E, 0x30];
-        let ac_output_apparent_power = vec![0x32, 0x30, 0x31, 0x30];
-        let ac_output_active_power = vec![0x31, 0x39, 0x32, 0x30];
-        let ac_output_load = vec![0x30, 0x32, 0x35];
-        let bus_voltage = vec![0x30, 0x32, 0x30];
-        let battery_voltage = vec![0x35, 0x32, 0x2E, 0x31, 0x30];
-        let battery_charging_current = vec![0x35, 0x34];
-        let battery_capacity = vec![0x31, 0x30, 0x30];
-        let inverter_heat_sink_temperature = vec![0x30, 0x30, 0x39, 0x30];
-        let pv_input_current = vec![0x30, 0x34, 0x30, 0x30];
-        let pv_input_voltage = vec![0x30, 0x34, 0x30, 0x2E, 0x35];
-        let battery_voltage_scc = vec![0x35, 0x30, 0x2E, 0x32, 0x35];
-        let battery_discharge_current = vec![0x30, 0x30, 0x30, 0x32, 0x35];
-        let device_status = vec![0xB7, 0xB6, 0xB5, 0xB4, 0xB3, 0xB2, 0xB1, 0xB0];
+        let grid_voltage = vec![0x30, 0x35, 0x31, 0x2E, 0x32, 0x20];
+        let grid_frequency = vec![0x35, 0x30, 0x2E, 0x30, 0x20];
+        let ac_output_voltage = vec![0x33, 0x30, 0x31, 0x2E, 0x32, 0x20];
+        let ac_output_frequency = vec![0x35, 0x30, 0x2E, 0x30, 0x20];
+        let ac_output_apparent_power = vec![0x32, 0x30, 0x31, 0x30, 0x20];
+        let ac_output_active_power = vec![0x31, 0x39, 0x32, 0x30, 0x20];
+        let ac_output_load = vec![0x30, 0x32, 0x35, 0x20];
+        let bus_voltage = vec![0x30, 0x32, 0x30, 0x20];
+        let battery_voltage = vec![0x35, 0x32, 0x2E, 0x31, 0x30, 0x20];
+        let battery_charging_current = vec![0x30, 0x35, 0x34, 0x20];
+        let battery_capacity = vec![0x31, 0x30, 0x30, 0x20];
+        let inverter_heat_sink_temperature = vec![0x30, 0x30, 0x39, 0x30, 0x20];
+        let pv_input_current = vec![0x34, 0x30, 0x2E, 0x30, 0x20];
+        let pv_input_voltage = vec![0x30, 0x34, 0x30, 0x2E, 0x35, 0x20];
+        let battery_voltage_scc = vec![0x35, 0x30, 0x2E, 0x32, 0x35, 0x20];
+        let battery_discharge_current = vec![0x30, 0x30, 0x30, 0x32, 0x35, 0x20];
+        let device_status = vec![0xB7, 0xB6, 0xB5, 0xB4, 0xB3, 0xB2, 0xB1, 0xB0, 0x20];
         let response: Vec<u8> = vec![
             init_char,
             grid_voltage,
@@ -265,7 +267,7 @@ mod tests {
             ready.inverter_heat_sink_temperature, 90,
             "wrong inverter_heat_sink_temperature"
         );
-        assert_eq!(ready.pv_input_current, 400, "wrong pv_input_current");
+        assert_eq!(ready.pv_input_current, 40.0, "wrong pv_input_current");
         assert_eq!(ready.pv_input_voltage, 40.5, "wrong pv_input_voltage");
         assert_eq!(
             ready.battery_voltage_scc, 50.25,

@@ -11,20 +11,21 @@ mod inverter;
 pub async fn main() -> Result<(), Box<dyn Error>> {
     pretty_env_logger::init();
 
-    let mut uart = Uart::new(9_600, Parity::None, 8, 1)?;
+    let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
 
     uart.flush(Queue::Both)?;
 
     if write(&mut uart, inverter::general_status_request())? {
         let response = read(&mut uart)?;
-        println!("{:?}", response);
+        //println!("{:?}", response);
         let general_status_data = inverter::parse_general_status_response(response).unwrap();
         println!("{:?}", general_status_data);
     }
     Ok(())
 }
 
-fn write(uart: &mut Uart, msg: Vec<u8>) -> Result<bool, Box<dyn Error>> {
+fn write(uart: &mut Uart, mut msg: Vec<u8>) -> Result<bool, Box<dyn Error>> {
+    msg.push(0x0D);
     match uart.write(msg.as_slice()) {
         Ok(written_bytes) if written_bytes > 0 => return Ok(true),
         _ => return Ok(false),
