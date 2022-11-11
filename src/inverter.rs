@@ -27,7 +27,7 @@ pub struct DeviceGeneralStatus {
 }
 
 pub fn general_status_m(d: DeviceGeneralStatus) -> String {
-    return format!("inverter_general_status,inverter_id=1 grid_voltage={},grid_freq={},ac_output_voltage={},ac_output_freq={},ac_output_apparent_power={},ac_output_active_power={},ac_output_load={},bus_voltage={},battery_voltage={},battery_charging_current={},battery_capacity={},inverter_temp={},pv_input_current={},pv_input_voltage={},battery_voltage_scc={},battery_discharge_current={}\n",
+    return format!("inverter_general_status,inverter_id=1 grid_voltage={},grid_freq={},ac_output_voltage={},ac_output_freq={},ac_output_apparent_power={},ac_output_active_power={},ac_output_load={},bus_voltage={},battery_voltage={},battery_charging_current={},battery_capacity={},inverter_temp={},pv_input_current={},pv_input_voltage={},pv_input_power={}, battery_voltage_scc={},battery_discharge_current={}\n",
                    d.grid_voltage,
                    d.grid_frequency,
                    d.ac_output_voltage,
@@ -42,6 +42,7 @@ pub fn general_status_m(d: DeviceGeneralStatus) -> String {
                    d.inverter_heat_sink_temperature,
                    d.pv_input_current,
                    d.pv_input_voltage,
+                   d.pv_input_voltage * d.pv_input_current,
                    d.battery_voltage_scc,
                    d.battery_discharge_current
                    );
