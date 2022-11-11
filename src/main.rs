@@ -22,13 +22,17 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
         if write(&mut uart, inverter::general_status_request())? {
             let response = read(&mut uart)?;
-            let general_status_data = inverter::parse_general_status_response(response).unwrap();
-            let influx_msg = inverter::general_status_m(general_status_data);
-            println!("{}", influx_msg);
-            influxdb::write(&client, influx_msg);
+            let general_status_data = inverter::parse_general_status_response(response);
+            match inverter::parse_general_status_response(response) {
+                Ok(general_status_data) => {
+                    let influx_msg = inverter::general_status_m(general_status_data);
+                    println!("{}", influx_msg);
+                    influxdb::write(&client, influx_msg);
+                }
+                None => println!("Wrong response CRC"),
+            }
         }
-
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(30)).await;
     }
 }
 
