@@ -2,6 +2,8 @@ const CMD_MODE_INQUIRY: &str = "QMOD";
 const CMD_GENERAL_STATUS: &str = "QPIGS";
 const CMD_RATING_INFORMATION: &str = "QPIRI";
 
+use std::array::TryFromSliceError;
+use std::error::Error;
 use std::str::{self, FromStr};
 
 #[allow(dead_code)]
@@ -68,14 +70,16 @@ pub fn rating_information_request() -> Vec<u8> {
     return request;
 }
 
-pub fn parse_general_status_response(response: Vec<u8>) -> Option<DeviceGeneralStatus> {
+pub fn parse_general_status_response(
+    response: Vec<u8>,
+) -> Result<DeviceGeneralStatus, Box<dyn Error>> {
     if validate_crc(&response) {
         // Truncate the CRC
         let mut response2 = response.to_owned();
         response2.truncate(response2.len().saturating_sub(2));
-        return Some(parse_general_status(response2));
+        return parse_general_status(response2);
     } else {
-        return None;
+        return Err("Invlid CRC".into());
     }
 }
 
@@ -97,44 +101,51 @@ pub fn parse_rating_information_response(response: Vec<u8>) -> Option<&'static s
     }
 }
 
-fn parse_general_status(result: Vec<u8>) -> DeviceGeneralStatus {
+fn parse_general_status(result: Vec<u8>) -> Result<DeviceGeneralStatus, Box<dyn Error>> {
     let mut offset: u8 = 1; // Skip start byte '('
-    return DeviceGeneralStatus {
-        grid_voltage: convert(&result, &mut offset, 5),
-        grid_frequency: convert(&result, &mut offset, 4),
-        ac_output_voltage: convert(&result, &mut offset, 5),
-        ac_output_frequency: convert(&result, &mut offset, 4),
-        ac_output_apparent_power: convert(&result, &mut offset, 4),
-        ac_output_active_power: convert(&result, &mut offset, 4),
-        ac_output_load: convert(&result, &mut offset, 3),
-        bus_voltage: convert(&result, &mut offset, 3),
-        battery_voltage: convert(&result, &mut offset, 5),
-        battery_charging_current: convert(&result, &mut offset, 3),
-        battery_capacity: convert(&result, &mut offset, 3),
-        inverter_heat_sink_temperature: convert(&result, &mut offset, 4),
-        pv_input_current: convert(&result, &mut offset, 4),
-        pv_input_voltage: convert(&result, &mut offset, 5),
-        battery_voltage_scc: convert(&result, &mut offset, 5),
-        battery_discharge_current: convert(&result, &mut offset, 5),
-        device_status: result[(offset as usize)..(offset as usize + 8)]
-            .try_into()
-            .unwrap(),
-    };
+    return Ok(DeviceGeneralStatus {
+        grid_voltage: convert(&result, &mut offset, 5)?,
+        grid_frequency: convert(&result, &mut offset, 4)?,
+        ac_output_voltage: convert(&result, &mut offset, 5)?,
+        ac_output_frequency: convert(&result, &mut offset, 4)?,
+        ac_output_apparent_power: convert(&result, &mut offset, 4)?,
+        ac_output_active_power: convert(&result, &mut offset, 4)?,
+        ac_output_load: convert(&result, &mut offset, 3)?,
+        bus_voltage: convert(&result, &mut offset, 3)?,
+        battery_voltage: convert(&result, &mut offset, 5)?,
+        battery_charging_current: convert(&result, &mut offset, 3)?,
+        battery_capacity: convert(&result, &mut offset, 3)?,
+        inverter_heat_sink_temperature: convert(&result, &mut offset, 4)?,
+        pv_input_current: convert(&result, &mut offset, 4)?,
+        pv_input_voltage: convert(&result, &mut offset, 5)?,
+        battery_voltage_scc: convert(&result, &mut offset, 5)?,
+        battery_discharge_current: convert(&result, &mut offset, 5)?,
+        device_status: convert_device_status(&result, offset)?,
+    });
 }
 
-fn convert<T: FromStr>(result: &Vec<u8>, offset: &mut u8, size: u8) -> T
+fn convert_device_status(result: &Vec<u8>, offset: u8) -> Result<[u8; 8], TryFromSliceError> {
+    let start = offset as usize;
+    let end = (offset + 8) as usize;
+    return result[start..end].try_into();
+}
+
+fn convert<T: FromStr>(
+    result: &Vec<u8>,
+    offset: &mut u8,
+    size: u8,
+) -> Result<T, Box<dyn Error + 'static>>
 where
-    <T as FromStr>::Err: std::fmt::Debug,
+    <T as FromStr>::Err: Error + 'static,
 {
     let start = *offset as usize;
     let end = (*offset + size) as usize;
-    let result = str::from_utf8(&result[start..end])
-        .unwrap()
-        .parse::<T>()
-        .unwrap();
+
     *offset = *offset + size + 1;
 
-    return result;
+    let as_str = str::from_utf8(&result[start..end])?;
+
+    return Ok(as_str.parse::<T>()?);
 }
 
 fn convert_cmd(cmd: &str) -> Vec<u8> {
@@ -264,7 +275,7 @@ mod tests {
         .flatten()
         .collect();
 
-        let ready = parse_general_status(response);
+        let ready = parse_general_status(response).unwrap();
         assert_eq!(ready.grid_voltage, 51.2, "wrong grid_voltage");
         assert_eq!(ready.grid_frequency, 50.0, "wrong grid_frequency");
         assert_eq!(ready.ac_output_voltage, 301.2, "wrong ac_output_voltage");
