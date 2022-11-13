@@ -13,13 +13,13 @@ mod inverter;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
-    pretty_env_logger::init();
+    //pretty_env_logger::init();
 
-    let client = influxdb::influx_new_client();
-    let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
+    //let client = influxdb::influx_new_client();
+    //let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
     tokio::spawn(read_counters());
 
-    //loop {
+    loop {
         //uart.flush(Queue::Both)?;
         //if write(&mut uart, inverter::general_status_request())? {
             //let response = read(&mut uart)?;
@@ -32,9 +32,10 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
                 //Err(e) => println!("Error: {}\n", e),
             //}
         //}
-        //sleep(Duration::from_secs(30)).await;
-    //}
-    Ok(())
+
+        println!("Ok");
+        sleep(Duration::from_secs(30)).await;
+    }
 }
 
 fn write(uart: &mut Uart, mut msg: Vec<u8>) -> Result<bool, Box<dyn Error>> {
