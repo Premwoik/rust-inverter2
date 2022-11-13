@@ -30,19 +30,20 @@ pub struct DeviceGeneralStatus {
 
 pub struct EnergyMeasurements {
     output: f32,
-    output_est_power: f32,
+    output_est_power: u16,
     input: f32,
-    input_est_power: f32,
+    input_est_power: u16,
 }
 
 pub fn parse_energy_packet(data: &[u8]) -> EnergyMeasurements {
-    let output = (data[1]as f32) * 0.001;
-    let input = (data[4] as f32) * 0.001;
+    let raw_output = ((data[0] as u16) << 8) | data[1] as u16;
+    let raw_input = ((data[3] as u16) << 8) | data[4] as u16;
+
     return EnergyMeasurements {
-        output,
-        output_est_power: output * 12.0,
-        input,
-        input_est_power: input * 12.0,
+        output: raw_output as f32 * 0.001,
+        output_est_power: raw_output * 12,
+        input: raw_input as f32 * 0.001,
+        input_est_power: raw_input * 12,
     };
 }
 
