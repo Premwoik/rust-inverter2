@@ -1,7 +1,3 @@
-extern crate pretty_env_logger;
-#[macro_use]
-extern crate log;
-
 use rppal::i2c::I2c;
 use rppal::uart::{Parity, Queue, Uart};
 use std::error::Error;
@@ -18,18 +14,18 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     tokio::spawn(read_counters());
 
     loop {
-        //uart.flush(Queue::Both)?;
-        //if write(&mut uart, inverter::general_status_request())? {
-            //let response = read(&mut uart)?;
-            //match inverter::parse_general_status_response(response) {
-                //Ok(general_status_data) => {
-                    //let influx_msg = inverter::format_general_status(general_status_data);
-                    //println!("{}", influx_msg);
-                    //influxdb::write(&client, influx_msg);
-                //}
-                //Err(e) => println!("Error: {}\n", e),
-            //}
-        //}
+        uart.flush(Queue::Both)?;
+        if write(&mut uart, inverter::general_status_request())? {
+            let response = read(&mut uart)?;
+            match inverter::parse_general_status_response(response) {
+                Ok(general_status_data) => {
+                    let influx_msg = inverter::format_general_status(general_status_data);
+                    println!("{}", influx_msg);
+                    influxdb::write(&client, influx_msg);
+                }
+                Err(e) => println!("Error: {}\n", e),
+            }
+        }
 
         println!("Ok");
         sleep(Duration::from_secs(30)).await;
