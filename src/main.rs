@@ -20,8 +20,8 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     tokio::spawn(read_counters());
 
     loop {
+        println!("Loop");
         uart.flush(Queue::Both).expect("Uart fail");
-
 
         if write(&mut uart, inverter::general_status_request())? {
             let response = read(&mut uart)?;
