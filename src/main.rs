@@ -14,6 +14,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     tokio::spawn(read_counters());
 
     loop {
+        println!("UART");
         uart.flush(Queue::Both)?;
         if write(&mut uart, inverter::general_status_request())? {
             let response = read(&mut uart).await?;
@@ -26,11 +27,13 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
                 Err(e) => println!("Error: {}\n", e),
             }
         }
+        println!("Sleep UART main loop");
         sleep(Duration::from_secs(30)).await;
     }
 }
 
 fn write(uart: &mut Uart, mut msg: Vec<u8>) -> Result<bool, Box<dyn Error>> {
+    println!("write UART");
     msg.push(0x0D);
     match uart.write(msg.as_slice()) {
         Ok(written_bytes) if written_bytes > 0 => return Ok(true),
@@ -49,7 +52,8 @@ async fn read(uart: &mut Uart) -> Result<Vec<u8>, Box<dyn Error>> {
             }
             msg.push(buffer[0]);
         } else {
-            sleep(Duration::from_millis(500)).await;
+            println!("Sleep read UART");
+            sleep(Duration::from_millis(100)).await;
         }
     }
 }
