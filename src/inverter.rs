@@ -28,7 +28,26 @@ pub struct DeviceGeneralStatus {
     device_status: [u8; 8],
 }
 
-pub fn general_status_m(d: DeviceGeneralStatus) -> String {
+pub struct EnergyMeasurements {
+    output: u8,
+    input: u8,
+}
+
+pub fn parse_energy_packet(data: &[u8]) -> EnergyMeasurements {
+    return EnergyMeasurements {
+        output: data[1],
+        input: data[4],
+    };
+}
+
+pub fn format_energy_meters(m: EnergyMeasurements) -> String {
+    return format!(
+        "energy_meter,id=3 usage={}\nenergy_meter,id=4 usage={}\n",
+        m.input, m.output
+    );
+}
+
+pub fn format_general_status(d: DeviceGeneralStatus) -> String {
     return format!("inverter_general_status,inverter_id=1 grid_voltage={},grid_freq={},ac_output_voltage={},ac_output_freq={},ac_output_apparent_power={},ac_output_active_power={},ac_output_load={},bus_voltage={},battery_voltage={},battery_charging_current={},battery_capacity={},inverter_temp={},pv_input_current={},pv_input_voltage={},pv_input_power={:.2},battery_voltage_scc={},battery_discharge_current={}\n",
                    d.grid_voltage,
                    d.grid_frequency,
