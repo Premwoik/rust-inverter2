@@ -36,8 +36,8 @@ pub struct EnergyMeasurements {
 }
 
 pub fn parse_energy_packet(data: &[u8]) -> EnergyMeasurements {
-    let output = ((((data[0] as u16) << 8) | data[1] as u16) as f32) * 0.001;
-    let input = ((((data[3] as u16) << 8) | data[4] as u16) as f32) * 0.001;
+    let output = (data[1]as f32) * 0.001;
+    let input = (data[4] as f32) * 0.001;
     return EnergyMeasurements {
         output,
         output_est_power: output * 12.0,
