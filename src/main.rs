@@ -19,23 +19,22 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
     tokio::spawn(read_counters());
 
-    loop {
-        println!("Loop");
-        uart.flush(Queue::Both).expect("Uart fail");
-
-        if write(&mut uart, inverter::general_status_request())? {
-            let response = read(&mut uart)?;
-            match inverter::parse_general_status_response(response) {
-                Ok(general_status_data) => {
-                    let influx_msg = inverter::format_general_status(general_status_data);
-                    println!("{}", influx_msg);
-                    influxdb::write(&client, influx_msg);
-                }
-                Err(e) => println!("Error: {}\n", e),
-            }
-        }
-        sleep(Duration::from_secs(30)).await;
-    }
+    //loop {
+        //uart.flush(Queue::Both)?;
+        //if write(&mut uart, inverter::general_status_request())? {
+            //let response = read(&mut uart)?;
+            //match inverter::parse_general_status_response(response) {
+                //Ok(general_status_data) => {
+                    //let influx_msg = inverter::format_general_status(general_status_data);
+                    //println!("{}", influx_msg);
+                    //influxdb::write(&client, influx_msg);
+                //}
+                //Err(e) => println!("Error: {}\n", e),
+            //}
+        //}
+        //sleep(Duration::from_secs(30)).await;
+    //}
+    Ok(())
 }
 
 fn write(uart: &mut Uart, mut msg: Vec<u8>) -> Result<bool, Box<dyn Error>> {
