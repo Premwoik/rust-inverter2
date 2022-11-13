@@ -2,6 +2,7 @@ extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
 
+use rppal::i2c::I2c;
 use rppal::uart::{Parity, Queue, Uart};
 use std::error::Error;
 
@@ -16,6 +17,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
     let client = influxdb::influx_new_client();
     let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
+    tokio::spawn(read_counters());
 
     loop {
         uart.flush(Queue::Both)?;
@@ -54,5 +56,18 @@ fn read(uart: &mut Uart) -> Result<Vec<u8>, Box<dyn Error>> {
             }
             msg.push(buffer[0]);
         }
+    }
+}
+
+async fn read_counters() {
+    let mut i2c = I2c::new().unwrap();
+    i2c.set_slave_address(8).unwrap();
+    let mut buffer = [0u8; 5];
+    loop {
+        match i2c.read(&mut buffer) {
+            Ok(_) => println!("{:?}\n", &buffer),
+            Err(e) => println!("I2c read error {}\n", e),
+        };
+        sleep(Duration::from_secs(5)).await;
     }
 }
