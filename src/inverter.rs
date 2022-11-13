@@ -29,21 +29,27 @@ pub struct DeviceGeneralStatus {
 }
 
 pub struct EnergyMeasurements {
-    output: u8,
-    input: u8,
+    output: f32,
+    output_est_power: f32,
+    input: f32,
+    input_est_power: f32,
 }
 
 pub fn parse_energy_packet(data: &[u8]) -> EnergyMeasurements {
+    let output = ((((data[0] as u16) << 8) | data[1] as u16) as f32) * 0.001;
+    let input = ((((data[3] as u16) << 8) | data[4] as u16) as f32) * 0.001;
     return EnergyMeasurements {
-        output: data[1],
-        input: data[4],
+        output,
+        output_est_power: output * 12.0,
+        input,
+        input_est_power: input * 12.0,
     };
 }
 
 pub fn format_energy_meters(m: EnergyMeasurements) -> String {
     return format!(
-        "energy_meter,meter_id=3 usage={}\nenergy_meter,meter_id=4 usage={}\n",
-        m.input, m.output
+        "energy_meter,meter_id=3 usage={},est_power={}\nenergy_meter,meter_id=4 usage={},est_power={}\n",
+        m.input, m.input_est_power, m.output, m.output_est_power
     );
 }
 

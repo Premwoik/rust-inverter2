@@ -74,6 +74,6 @@ async fn read_counters() {
             }
             Err(e) => println!("I2c read error {}\n", e),
         };
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(300)).await;
     }
 }
