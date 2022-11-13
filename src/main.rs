@@ -16,7 +16,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         uart.flush(Queue::Both)?;
         if write(&mut uart, inverter::general_status_request())? {
-            let response = read(&mut uart)?;
+            let response = read(&mut uart).await?;
             match inverter::parse_general_status_response(response) {
                 Ok(general_status_data) => {
                     let influx_msg = inverter::format_general_status(general_status_data);
@@ -26,8 +26,6 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
                 Err(e) => println!("Error: {}\n", e),
             }
         }
-
-        println!("Ok");
         sleep(Duration::from_secs(30)).await;
     }
 }
@@ -40,7 +38,7 @@ fn write(uart: &mut Uart, mut msg: Vec<u8>) -> Result<bool, Box<dyn Error>> {
     }
 }
 
-fn read(uart: &mut Uart) -> Result<Vec<u8>, Box<dyn Error>> {
+async fn read(uart: &mut Uart) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut msg: Vec<u8> = Vec::new();
     let mut buffer = [0u8 | 1];
 
@@ -50,6 +48,8 @@ fn read(uart: &mut Uart) -> Result<Vec<u8>, Box<dyn Error>> {
                 return Ok(msg);
             }
             msg.push(buffer[0]);
+        } else {
+            sleep(Duration::from_millis(500)).await;
         }
     }
 }
