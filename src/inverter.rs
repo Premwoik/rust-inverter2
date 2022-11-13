@@ -42,7 +42,7 @@ pub fn parse_energy_packet(data: &[u8]) -> EnergyMeasurements {
 
 pub fn format_energy_meters(m: EnergyMeasurements) -> String {
     return format!(
-        "energy_meter,id=3 usage={}\nenergy_meter,id=4 usage={}\n",
+        "energy_meter,meter_id=3 usage={}\nenergy_meter,meter_id=4 usage={}\n",
         m.input, m.output
     );
 }
