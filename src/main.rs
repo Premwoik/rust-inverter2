@@ -13,10 +13,8 @@ mod inverter;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
-    //pretty_env_logger::init();
-
-    //let client = influxdb::influx_new_client();
-    //let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
+    let client = influxdb::influx_new_client();
+    let mut uart = Uart::new(2_400, Parity::None, 8, 1)?;
     tokio::spawn(read_counters());
 
     loop {
