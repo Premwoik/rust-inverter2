@@ -58,17 +58,50 @@ async fn read_counters() {
     let client = influxdb::influx_new_client();
     let mut i2c = I2c::new().unwrap();
     i2c.set_slave_address(8).unwrap();
-    let mut buffer = [0u8; 5];
+    let mut buffer = [0u8; 10];
     loop {
-        match i2c.read(&mut buffer) {
-            Ok(_) => {
-                let em = inverter::parse_energy_packet(&buffer);
-                let msg = inverter::format_energy_meters(em);
-                println!("{:?}\n", msg);
+        let succ = match try_read_measurements(&mut i2c, &mut buffer) {
+            Ok(msg) => {
+                println!("0 - {}\n", msg);
                 influxdb::write(&client, msg);
+                true
             }
-            Err(e) => println!("I2c read error {}\n", e),
+            Err(e) => {
+                println!("I2c read error {}\n", e);
+                false
+            }
         };
-        sleep(Duration::from_secs(300)).await;
+
+        if succ {
+            for _ in 1..5 {
+                sleep(Duration::from_secs(1)).await;
+                match try_read_old_measurements(&mut i2c, &mut buffer) {
+                    Ok(msg) => {
+                        println!("1 - {}\n", msg);
+                        influxdb::write(&client, msg);
+                        break;
+                    }
+                    Err(e) => {
+                        println!("I2c read error {}\n", e);
+                    }
+                }
+            }
+        }
+
+        sleep(Duration::from_secs(5)).await;
     }
+}
+
+fn try_read_measurements(i2c: &mut I2c, buffer: &mut [u8]) -> Result<String, Box<dyn Error>> {
+    i2c.read(buffer)?;
+    let object = inverter::parse_energy_packet(&buffer.to_vec())?;
+    let msg = inverter::format_energy_meters(object);
+    Ok(msg)
+}
+
+fn try_read_old_measurements(i2c: &mut I2c, buffer: &mut [u8]) -> Result<String, Box<dyn Error>> {
+    i2c.write_read(&[0x28, 0x01, 0x0D], buffer)?;
+    let object = inverter::parse_energy_packet(&buffer.to_vec())?;
+    let msg = inverter::format_energy_meters(object);
+    Ok(msg)
 }

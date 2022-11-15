@@ -35,16 +35,27 @@ pub struct EnergyMeasurements {
     input_est_power: u16,
 }
 
-pub fn parse_energy_packet(data: &[u8]) -> EnergyMeasurements {
+pub fn parse_energy_packet(data: &Vec<u8>) -> Result<EnergyMeasurements, Box<dyn Error>> {
+    let len = data.len();
+    if data[0] != 0x28 {
+        return Err("Wrong start byte".into());
+    };
+    if data[len - 1] != 0x28 {
+        return Err("Wrong end byte".into());
+    };
+    if !validate_crc(&data.to_vec()) {
+        return Err("Invlid energy packet CRC".into());
+    };
+
     let raw_output = ((data[0] as u16) << 8) | data[1] as u16;
     let raw_input = ((data[3] as u16) << 8) | data[4] as u16;
 
-    return EnergyMeasurements {
+    return Ok(EnergyMeasurements {
         output: raw_output as f32 * 0.001,
         output_est_power: raw_output * 12,
         input: raw_input as f32 * 0.001,
         input_est_power: raw_input * 12,
-    };
+    });
 }
 
 pub fn format_energy_meters(m: EnergyMeasurements) -> String {
