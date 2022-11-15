@@ -90,7 +90,7 @@ async fn read_counters() {
             }
         }
 
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(60)).await;
     }
 }
 

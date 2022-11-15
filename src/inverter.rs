@@ -52,9 +52,9 @@ pub fn parse_energy_packet(data: &Vec<u8>) -> Result<EnergyMeasurements, Box<dyn
 
     return Ok(EnergyMeasurements {
         output: raw_output as f32 * 0.001,
-        output_est_power: raw_output * 12,
+        output_est_power: raw_output * 60,
         input: raw_input as f32 * 0.001,
-        input_est_power: raw_input * 12,
+        input_est_power: raw_input * 60,
     });
 }
 
