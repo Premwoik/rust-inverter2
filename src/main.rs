@@ -67,7 +67,7 @@ async fn read_counters() {
                 true
             }
             Err(e) => {
-                println!("I2c read error {}\n", e);
+                println!("0 - I2c read error {}\n", e);
                 false
             }
         };
@@ -82,7 +82,7 @@ async fn read_counters() {
                         break;
                     }
                     Err(e) => {
-                        println!("I2c read error {}\n", e);
+                        println!("1 - I2c read error {}\n", e);
                     }
                 }
             }

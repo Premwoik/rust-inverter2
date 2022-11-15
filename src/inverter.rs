@@ -40,7 +40,7 @@ pub fn parse_energy_packet(data: &Vec<u8>) -> Result<EnergyMeasurements, Box<dyn
     if data[0] != 0x28 {
         return Err("Wrong start byte".into());
     };
-    if data[len - 1] != 0x28 {
+    if data[len - 1] != 0x0D {
         return Err("Wrong end byte".into());
     };
     if !validate_crc(&data.to_vec()) {
