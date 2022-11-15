@@ -42,16 +42,19 @@ async fn read(uart: &mut Uart) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut msg: Vec<u8> = Vec::new();
     let mut buffer = [0u8 | 1];
 
-    loop {
+    let mut counter = 0;
+    while counter < 4 {
         if uart.read(&mut buffer)? > 0 {
             if buffer[0] == 0x0D {
                 return Ok(msg);
             }
             msg.push(buffer[0]);
         } else {
+            counter += 1;
             sleep(Duration::from_millis(100)).await;
         }
     }
+    return Err("Timeouted while waiting for end byte".into());
 }
 
 async fn read_counters() {
