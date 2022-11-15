@@ -72,7 +72,7 @@ async fn read_counters() {
             }
         };
 
-        if succ {
+        if !succ {
             for _ in 1..5 {
                 sleep(Duration::from_secs(1)).await;
                 match try_read_old_measurements(&mut i2c, &mut buffer) {
