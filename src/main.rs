@@ -58,9 +58,8 @@ async fn read_counters() {
     let client = influxdb::influx_new_client();
     let mut i2c = I2c::new().unwrap();
     i2c.set_slave_address(8).unwrap();
-    let mut buffer = [0u8; 10];
     loop {
-        let succ = match try_read_measurements(&mut i2c, &mut buffer) {
+        let succ = match try_read_measurements(&mut i2c) {
             Ok(msg) => {
                 println!("{}\n", msg);
                 influxdb::write(&client, msg);
@@ -75,7 +74,7 @@ async fn read_counters() {
         if !succ {
             for _ in 1..5 {
                 sleep(Duration::from_secs(1)).await;
-                match try_read_old_measurements(&mut i2c, &mut buffer) {
+                match try_read_old_measurements(&mut i2c) {
                     Ok(msg) => {
                         println!("1 - {}\n", msg);
                         influxdb::write(&client, msg);
@@ -88,19 +87,23 @@ async fn read_counters() {
             }
         }
 
-        sleep(Duration::from_secs(30)).await;
+        sleep(Duration::from_secs(5)).await;
     }
 }
 
-fn try_read_measurements(i2c: &mut I2c, buffer: &mut [u8]) -> Result<String, Box<dyn Error>> {
-    i2c.read(buffer)?;
+fn try_read_measurements(i2c: &mut I2c) -> Result<String, Box<dyn Error>> {
+    let mut buffer = [0u8; 10];
+    i2c.read(&mut buffer)?;
+    println!("{:?}\n", buffer);
     let object = inverter::parse_energy_packet(&buffer.to_vec())?;
     let msg = inverter::format_energy_meters(object);
     Ok(msg)
 }
 
-fn try_read_old_measurements(i2c: &mut I2c, buffer: &mut [u8]) -> Result<String, Box<dyn Error>> {
-    i2c.write_read(&[0x28, 0x01, 0x0D], buffer)?;
+fn try_read_old_measurements(i2c: &mut I2c) -> Result<String, Box<dyn Error>> {
+    let mut buffer = [0u8; 10];
+    i2c.write_read(&[0x28, 0x01, 0x0D], &mut buffer)?;
+    println!("{:?}\n", buffer);
     let object = inverter::parse_energy_packet(&buffer.to_vec())?;
     let msg = inverter::format_energy_meters(object);
     Ok(msg)
