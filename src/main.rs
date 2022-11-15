@@ -73,7 +73,7 @@ async fn read_counters() {
 
         if !succ {
             for _ in 1..5 {
-                sleep(Duration::from_secs(1)).await;
+                sleep(Duration::from_millis(100)).await;
                 match try_read_old_measurements(&mut i2c) {
                     Ok(msg) => {
                         println!("1 - {}\n", msg);
