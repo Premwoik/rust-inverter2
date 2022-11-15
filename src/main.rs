@@ -62,12 +62,12 @@ async fn read_counters() {
     loop {
         let succ = match try_read_measurements(&mut i2c, &mut buffer) {
             Ok(msg) => {
-                println!("0 - {}\n", msg);
+                println!("{}\n", msg);
                 influxdb::write(&client, msg);
                 true
             }
             Err(e) => {
-                println!("0 - I2c read error {}\n", e);
+                println!("I2c read error {}\n", e);
                 false
             }
         };
@@ -88,7 +88,7 @@ async fn read_counters() {
             }
         }
 
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(30)).await;
     }
 }
 
