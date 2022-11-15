@@ -47,8 +47,8 @@ pub fn parse_energy_packet(data: &Vec<u8>) -> Result<EnergyMeasurements, Box<dyn
         return Err("Invlid energy packet CRC".into());
     };
 
-    let raw_output = ((data[0] as u16) << 8) | data[1] as u16;
-    let raw_input = ((data[3] as u16) << 8) | data[4] as u16;
+    let raw_output = ((data[1] as u16) << 8) | data[2] as u16;
+    let raw_input = ((data[4] as u16) << 8) | data[5] as u16;
 
     return Ok(EnergyMeasurements {
         output: raw_output as f32 * 0.001,

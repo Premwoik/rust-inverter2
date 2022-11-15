@@ -94,7 +94,7 @@ async fn read_counters() {
 fn try_read_measurements(i2c: &mut I2c) -> Result<String, Box<dyn Error>> {
     let mut buffer = [0u8; 10];
     i2c.read(&mut buffer)?;
-    println!("{:?}\n", buffer);
+    println!("{:?}", buffer);
     let object = inverter::parse_energy_packet(&buffer.to_vec())?;
     let msg = inverter::format_energy_meters(object);
     Ok(msg)
@@ -103,7 +103,7 @@ fn try_read_measurements(i2c: &mut I2c) -> Result<String, Box<dyn Error>> {
 fn try_read_old_measurements(i2c: &mut I2c) -> Result<String, Box<dyn Error>> {
     let mut buffer = [0u8; 10];
     i2c.write_read(&[0x28, 0x01, 0x0D], &mut buffer)?;
-    println!("{:?}\n", buffer);
+    println!("{:?}", buffer);
     let object = inverter::parse_energy_packet(&buffer.to_vec())?;
     let msg = inverter::format_energy_meters(object);
     Ok(msg)
